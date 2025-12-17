@@ -4,28 +4,20 @@ from dotenv import load_dotenv
 from io import BytesIO
 import streamlit.components.v1 as components
 import base64
-
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 
 
-# --------------------------------------------------
-# Page Config
-# --------------------------------------------------
 st.set_page_config(
     page_title="PromptlyAI",
     page_icon="🤖",
     layout="wide"
 )
 
-# --------------------------------------------------
-# Global Styles
-# --------------------------------------------------
 st.markdown(
     """
     <style>
@@ -67,56 +59,57 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# --------------------------------------------------
-# Environment
-# --------------------------------------------------
 load_dotenv()
 
-# --------------------------------------------------
-# Prompt Template
-# --------------------------------------------------
 prompt = ChatPromptTemplate.from_messages(
     [
         (
             "system",
             """
-You are Promptly — a precise, thoughtful, and professional AI assistant.
+You are Promptly — a calm, precise, and professional AI assistant.
 
-STYLE & PRESENTATION:
-- Prefer bullet points
-- Clean spacing
-- Clear structure
+YOUR WRITING STYLE:
+• Think before answering  
+• Be confident, not verbose  
+• Sound human, not robotic  
 
-ROLE:
-- Accurate, concise, and readable answers
-- No hallucinations
+STRUCTURE RULES:
+• Start with a short, clear explanation (1–2 lines max)
+• Then use bullet points or steps when useful
+• Use headings only when they add clarity
+• Avoid unnecessary repetition
 
-FORMAT:
-- Bullet points by default
-- Headings when useful
+QUALITY STANDARDS:
+• Be technically accurate
+• No assumptions or hallucinations
+• If unsure, clearly say so
+• Prefer clarity over cleverness
+
+FORMATTING PREFERENCES:
+• Clean spacing
+• Short paragraphs
+• Bullets for lists
+• Code only when relevant
+
+GOAL:
+Deliver answers that feel:
+✓ Thoughtful  
+✓ Easy to scan  
+✓ Immediately useful  
 """
         ),
         ("user", "{question}")
     ]
 )
 
-# --------------------------------------------------
-# LLM
-# --------------------------------------------------
 llm = ChatGroq(
     model="llama-3.1-8b-instant",
     temperature=0.5,
     api_key=os.getenv("GROQ_API_KEY")
 )
 
-# --------------------------------------------------
-# Chain
-# --------------------------------------------------
 chain = prompt | llm | StrOutputParser()
 
-# --------------------------------------------------
-# PDF Generator
-# --------------------------------------------------
 def generate_pdf(question: str, answer: str) -> BytesIO:
     buffer = BytesIO()
 
@@ -149,32 +142,22 @@ def generate_pdf(question: str, answer: str) -> BytesIO:
     buffer.seek(0)
     return buffer
 
-
-# --------------------------------------------------
-# Session State
-# --------------------------------------------------
 st.session_state.setdefault("question", "")
 st.session_state.setdefault("response", "")
 st.session_state.setdefault("last_generated_question", "")
 
-# --------------------------------------------------
-# UI
-# --------------------------------------------------
 st.title("🤖 Chat with PromptlyAI")
 
-# -------------------- Input -----------------------
 user_question = st.text_input(
     "Ask something",
     value=st.session_state.question
 )
 
-# ✅ Generate ONLY if question changed
 if user_question and user_question != st.session_state.last_generated_question:
     st.session_state.question = user_question
     st.session_state.response = chain.invoke({"question": user_question})
     st.session_state.last_generated_question = user_question
 
-# -------------------- Response --------------------
 if st.session_state.response:
     st.subheader("Answer")
 
@@ -183,7 +166,6 @@ if st.session_state.response:
         unsafe_allow_html=True
     )
 
-    # ✅ COPY BUTTON
     encoded = base64.b64encode(
         st.session_state.response.encode("utf-8")
     ).decode("utf-8")
@@ -247,7 +229,6 @@ if st.session_state.response:
             st.session_state.response
         )
 
-        # ✅ DOES NOT REGENERATE
         st.download_button(
             label="📄 Export as PDF",
             data=pdf,
