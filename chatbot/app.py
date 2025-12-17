@@ -27,7 +27,7 @@ llm = ChatGroq(
 chain = prompt | llm | StrOutputParser()
 
 # UI
-st.title("🤖 Chatbot with Groq (LLaMA 3)")
+st.title("🤖 Chat with Promptly ")
 question = st.text_input("Ask something")
 
 if question:
